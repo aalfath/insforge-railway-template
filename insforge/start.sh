@@ -5,8 +5,10 @@
 set -eu
 
 DATA_DIR="${INSFORGE_DATA_DIR:-/insforge-data}"
-export STORAGE_DIR="${STORAGE_DIR:-$DATA_DIR/storage}"
-export LOGS_DIR="${LOGS_DIR:-$DATA_DIR/logs}"
+# The image sets STORAGE_DIR=/insforge-storage and LOGS_DIR=/insforge-logs, which
+# are not on the volume: uploads there vanish on every redeploy. Always use the volume.
+export STORAGE_DIR="$DATA_DIR/storage"
+export LOGS_DIR="$DATA_DIR/logs"
 export ROOT_ADMIN_USERNAME="${ROOT_ADMIN_USERNAME:-admin}"
 export PORT="${PORT:-7130}"
 # Keep the heap inside a 0.5 GB service unless the deployer overrides it.
