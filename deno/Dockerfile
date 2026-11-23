@@ -9,11 +9,17 @@ ENV DENO_DIR=/deno-dir \
     WORKER_TIMEOUT_MS=60000
 
 COPY functions /app/functions
-# Download the runtime's own imports at build time, so a restart doesn't
-# depend on deno.land being reachable. (DENO_PREFETCH=0 skips it for offline test builds.)
+# Download the runtime's imports and the SDK every function worker loads
+# (npm:@insforge/sdk, std base64) at build time. Otherwise the first function
+# calls after each deploy download them at runtime, in parallel, and can hang.
+# (DENO_PREFETCH=0 skips it for offline test builds.)
 ARG DENO_PREFETCH=1
 RUN mkdir -p /deno-dir \
- && if [ "$DENO_PREFETCH" = 1 ]; then deno cache --no-lock functions/server.ts; fi \
+ && if [ "$DENO_PREFETCH" = 1 ]; then \
+      deno cache --no-lock functions/server.ts \
+      && printf "import 'npm:@insforge/sdk';\nimport 'https://deno.land/std@0.224.0/encoding/base64.ts';\n" > /tmp/prefetch.ts \
+      && deno cache --no-lock /tmp/prefetch.ts && rm /tmp/prefetch.ts; \
+    fi \
  && chown -R deno:deno /deno-dir
 
 USER deno

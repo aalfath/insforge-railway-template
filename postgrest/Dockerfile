@@ -12,4 +12,8 @@ ENV PGRST_SERVER_HOST="::" \
     PGRST_OPENAPI_SERVER_PROXY_URI=http://localhost:3000 \
     PGRST_ADMIN_SERVER_PORT=3001
 
+# Railway's health check uses the admin server's /live on $PORT (3001). /ready
+# answers 503 for minutes after Postgres restarts, while the LISTEN channel
+# reconnects, even though REST requests already work again.
+
 CMD ["postgrest"]
