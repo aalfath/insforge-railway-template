@@ -10,8 +10,10 @@ ENV DENO_DIR=/deno-dir \
 
 COPY functions /app/functions
 # Download the runtime's own imports at build time, so a restart doesn't
-# depend on deno.land being reachable.
-RUN mkdir -p /deno-dir && deno cache --no-lock functions/server.ts \
+# depend on deno.land being reachable. (DENO_PREFETCH=0 skips it for offline test builds.)
+ARG DENO_PREFETCH=1
+RUN mkdir -p /deno-dir \
+ && if [ "$DENO_PREFETCH" = 1 ]; then deno cache --no-lock functions/server.ts; fi \
  && chown -R deno:deno /deno-dir
 
 USER deno
